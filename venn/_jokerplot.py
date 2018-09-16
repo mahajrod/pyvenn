@@ -36,18 +36,25 @@ def draw_leaf(k, n_sets, color, label, fontsize, ax):
     draw_ellipse(10.6, k-.2, .9, .9, 0, color, ax)
     ax.text(11.2, k-.05, label, fontsize=fontsize, **TOP_TEXT)
 
-def draw_jokerplot_trunk_labels(petal_labels, fontsize, ax):
+def draw_jokerplot_trunk_labels(petal_labels, cumulative_trunk, fontsize, ax):
     """Add labels to intersections in trunk of jokerplot"""
     n_sets = len(list(petal_labels.keys())[0])
+    cumsum = 0
     trunk_x, trunk_y = (
         TRUNK_XFIT(range(n_sets)), TRUNK_YFIT(range(n_sets))
     )
     for n in range(n_sets):
         logic = bin(2**(n_sets-n)-1)[2:].zfill(n_sets)
         if logic in petal_labels:
+            label = petal_labels[logic]
+            if cumulative_trunk:
+                cumsum += int(label)
+                if cumsum > int(label):
+                    label = "+{} (={})".format(label, cumsum)
+            rotation = (n_sets - n - 1) * 8
             ax.text(
-                trunk_x[n], trunk_y[n], petal_labels[logic],
-                fontsize=fontsize, **CENTER_TEXT
+                trunk_x[n], trunk_y[n], rotation=rotation,
+                s=label, fontsize=fontsize, **CENTER_TEXT
             )
 
 def draw_jokerplot_bell_labels(bell_labels, fontsize, ax):
@@ -55,7 +62,7 @@ def draw_jokerplot_bell_labels(bell_labels, fontsize, ax):
     for k, label in enumerate(bell_labels):
         ax.text(10.6, k-.2, label, fontsize=fontsize, **CENTER_TEXT)
 
-def draw_jokerplot(*, petal_labels, bell_labels, dataset_labels, zorder, colors, figsize, fontsize, ax):
+def draw_jokerplot(*, petal_labels, bell_labels, cumulative_trunk, dataset_labels, zorder, colors, figsize, fontsize, ax):
     """Draw intersection of 6 leaves (does not include some combinations), annotate petals and dataset labels"""
     n_sets = len(dataset_labels)
     if n_sets > 6:
@@ -71,12 +78,12 @@ def draw_jokerplot(*, petal_labels, bell_labels, dataset_labels, zorder, colors,
         raise ValueError("`zorder` can only be 'default' or 'reversed'")
     for k, label, color in param_iterator:
         draw_leaf(k, n_sets, color, label, fontsize, ax)
-    draw_jokerplot_trunk_labels(petal_labels, fontsize, ax)
+    draw_jokerplot_trunk_labels(petal_labels, cumulative_trunk, fontsize, ax)
     draw_jokerplot_bell_labels(bell_labels, fontsize, ax)
     return ax
 
 def jokerplot(
-        data, petal_labels=None, fmt="{size}",
+        data, petal_labels=None, fmt="{size}", cumulative_trunk=False,
         cmap="viridis", alpha=.3, zorder="default",
         figsize=None, fontsize=13, ax=None
     ):
@@ -88,11 +95,17 @@ def jokerplot(
         if fmt is None:
             fmt = "{size}"
         petal_labels=generate_petal_labels(data.values(), fmt)
-    elif fmt is not None:
-        warn("Passing `fmt` with `petal_labels` will have no effect")
+    else:
+        if fmt is not None:
+            warn("Passing `fmt` with `petal_labels` will have no effect")
+        if cumulative_trunk:
+            raise ValueError("Cannot make cumulative trunk from custom labels")
+    if cumulative_trunk and (fmt != "{size}"):
+        raise NotImplementedError("cumulative trunk with non-default `fmt`")
     return draw_jokerplot(
         petal_labels=petal_labels,
         bell_labels=[len(dataset) for dataset in data.values()],
+        cumulative_trunk=cumulative_trunk,
         dataset_labels=data.keys(),
         colors=generate_colors(n_colors=n_sets, cmap=cmap, alpha=alpha),
         zorder=zorder, figsize=figsize, fontsize=fontsize, ax=ax

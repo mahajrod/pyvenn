@@ -1,5 +1,8 @@
+from numpy.polynomial import Polynomial
+
 CENTER_TEXT = dict(horizontalalignment="center", verticalalignment="center")
 RALIGN_TEXT = dict(horizontalalignment="right", verticalalignment="center")
+TOP_TEXT = dict(verticalalignment="top")
 
 SHAPE_COORDS = {
     2: [(.375, .500), (.625, .500)],
@@ -100,3 +103,8 @@ PSEUDOVENN_PETAL_COORDS = {
         "111111": (.500, .500)
     }
 }
+
+TRUNK_XFIT, TRUNK_YFIT = (
+    Polynomial([-2.19642857, -0.85821429,  0.34821429]),
+    Polynomial([-1.00642857,  1.2055    ,  0.02892857])
+)

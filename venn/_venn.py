@@ -77,10 +77,10 @@ def generate_petal_labels(datasets, fmt="{size}"):
         )
     return petal_labels
 
-def init_axes(ax, figsize):
+def init_axes(ax, figsize, dpi=None):
     """Create axes if do not exist, set axes parameters"""
     if ax is None:
-        _, ax = subplots(nrows=1, ncols=1, figsize=figsize)
+        _, ax = subplots(nrows=1, ncols=1, figsize=figsize, dpi=300 if dpi is None else dpi)
     ax.set(
         aspect="equal", frame_on=False,
         xlim=(-.05, 1.05), ylim=(-.05, 1.05),
@@ -98,7 +98,7 @@ def get_n_sets(petal_labels, dataset_labels):
             raise KeyError("Key not understood: " + logic)
     return n_sets
 
-def draw_venn(*, petal_labels, dataset_labels, hint_hidden, colors, figsize, fontsize, legend_loc, ax):
+def draw_venn(*, petal_labels, dataset_labels, hint_hidden, colors, figsize, fontsize, legend_loc, ax, dpi=None):
     """Draw true Venn diagram, annotate petals and dataset labels"""
     n_sets = get_n_sets(petal_labels, dataset_labels)
     if 2 <= n_sets < 6:
@@ -107,7 +107,7 @@ def draw_venn(*, petal_labels, dataset_labels, hint_hidden, colors, figsize, fon
         draw_shape = draw_triangle
     else:
         raise ValueError("Number of sets must be between 2 and 6")
-    ax = init_axes(ax, figsize)
+    ax = init_axes(ax, figsize,dpi=dpi)
     shape_params = zip(
         SHAPE_COORDS[n_sets], SHAPE_DIMS[n_sets], SHAPE_ANGLES[n_sets], colors
     )
@@ -138,12 +138,12 @@ def draw_hint_explanation(ax, dataset_labels, fontsize):
     )
     draw_text(ax, .5, -.1, hint_text, fontsize)
 
-def draw_pseudovenn6(*, petal_labels, dataset_labels, hint_hidden, colors, figsize, fontsize, legend_loc, ax):
+def draw_pseudovenn6(*, petal_labels, dataset_labels, hint_hidden, colors, figsize, fontsize, legend_loc, ax, dpi=None):
     """Draw intersection of 6 circles (does not include some combinations), annotate petals and dataset labels"""
     n_sets = get_n_sets(petal_labels, dataset_labels)
     if n_sets != 6:
         raise NotImplementedError("Pseudovenn implemented only for 6 sets")
-    ax = init_axes(ax, figsize)
+    ax = init_axes(ax, figsize, dpi=dpi)
     for step, color in zip(range(6), colors):
         angle = (2 - step) * pi / 3
         x = .5 + .2 * cos(angle)
@@ -180,7 +180,7 @@ def is_valid_dataset_dict(data):
     else:
         return True
 
-def venn_dispatch(data, func, fmt="{size}", hint_hidden=False, cmap="viridis", alpha=.4, figsize=(8, 8), fontsize=13, legend_loc="upper right", ax=None):
+def venn_dispatch(data, func, fmt="{size}", hint_hidden=False, cmap="viridis", alpha=.4, figsize=(8, 8), fontsize=13, dpi=None, legend_loc="upper right", ax=None):
     """Check input, generate petal labels, draw venn or pseudovenn diagram"""
     if not is_valid_dataset_dict(data):
         raise TypeError("Only dictionaries of sets are understood")
@@ -192,7 +192,7 @@ def venn_dispatch(data, func, fmt="{size}", hint_hidden=False, cmap="viridis", a
         petal_labels=generate_petal_labels(data.values(), fmt),
         dataset_labels=data.keys(), hint_hidden=hint_hidden,
         colors=generate_colors(n_colors=n_sets, cmap=cmap, alpha=alpha),
-        figsize=figsize, fontsize=fontsize, legend_loc=legend_loc, ax=ax
+        figsize=figsize, fontsize=fontsize, legend_loc=legend_loc, ax=ax, dpi=dpi
     )
 
 venn = partial(venn_dispatch, func=draw_venn, hint_hidden=False)

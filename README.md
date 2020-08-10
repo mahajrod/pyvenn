@@ -1,3 +1,5 @@
+Changes: added dpi control support
+
 # pyvenn: Venn diagrams for 2, 3, 4, 5, 6 sets
 
 Please refer to the Jupyter notebook for demos and a brief explanation of the
